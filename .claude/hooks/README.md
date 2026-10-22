@@ -12,7 +12,7 @@ This directory contains hooks for Claude Code that automate tasks during develop
 
 **Configuration**: Enabled in `.claude/settings.local.json` under the `hooks.PostToolUse` section.
 
-**Log Location**: `.claude/logs/tool-usage-YYYY-MM-DD.log`
+**Log Location**: `logs/tool-usage-YYYY-MM-DD.log` at the project root (`$CLAUDE_PROJECT_DIR/logs`, gitignored)
 
 **Log Format**:
 ```
@@ -33,19 +33,21 @@ Response: {"content": "..."}
 The hook runs automatically once configured. To view logs:
 ```bash
 # View today's log
-cat .claude/logs/tool-usage-$(date +%Y-%m-%d).log
+cat logs/tool-usage-$(date +%Y-%m-%d).log
 
 # View logs with live updates
-tail -f .claude/logs/tool-usage-$(date +%Y-%m-%d).log
+tail -f logs/tool-usage-$(date +%Y-%m-%d).log
 
 # Search logs for specific tool
-grep "Tool: Bash" .claude/logs/*.log
+grep "Tool: Bash" logs/*.log
 ```
 
 **Requirements**:
 - Optional: `jq` for better JSON formatting (`brew install jq` on macOS)
 
 ### 2. User Prompt Submit Hook (`user-prompt-submit.sh`)
+
+> Not included in this repository — described here as an example only.
 
 **Purpose**: Runs pre-commit linting checks when Claude creates commits.
 
@@ -93,6 +95,6 @@ See the [Claude Code Hooks Documentation](https://docs.claude.com/en/docs/claude
 - Ensure the hook script has execute permissions: `chmod +x .claude/hooks/*.sh`
 
 **Can't find logs?**
-- Logs are created in `.claude/logs/` directory
+- Logs are created in `logs/` at the project root
 - Check that `CLAUDE_PROJECT_DIR` environment variable is set correctly
 - Try running the hook manually to test: `./.claude/hooks/post-tool-use.sh`
