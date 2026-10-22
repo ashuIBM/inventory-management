@@ -36,7 +36,7 @@
         />
       </div>
     </header>
-    <FilterBar />
+    <FilterBar v-if="showFilterBar" />
     <main class="main-content">
       <router-view />
     </main>
@@ -59,6 +59,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from './api'
 import { useAuth } from './composables/useAuth'
 import { useI18n } from './composables/useI18n'
@@ -80,6 +81,11 @@ export default {
   setup() {
     const { currentUser } = useAuth()
     const { t } = useI18n()
+    const route = useRoute()
+
+    // Routes are unnamed, so match by path. The Restocking page ignores the
+    // global filters (warehouse/category/month/status), so the bar is hidden there.
+    const showFilterBar = computed(() => route.path !== '/restocking')
     const showProfileDetails = ref(false)
     const showTasks = ref(false)
     const apiTasks = ref([])
@@ -153,6 +159,7 @@ export default {
 
     return {
       t,
+      showFilterBar,
       showProfileDetails,
       showTasks,
       tasks,
