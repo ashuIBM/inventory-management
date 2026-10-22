@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
+from datetime import datetime, timedelta
 from pydantic import BaseModel
 from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders
 
@@ -89,6 +90,8 @@ class DemandForecast(BaseModel):
     forecasted_demand: int
     trend: str
     period: str
+    unit_cost: Optional[float] = None
+    lead_time_days: Optional[int] = None
 
 class BacklogItem(BaseModel):
     id: str
@@ -119,6 +122,89 @@ class CreatePurchaseOrderRequest(BaseModel):
     unit_cost: float
     expected_delivery_date: str
     notes: Optional[str] = None
+
+class RestockLine(BaseModel):
+    item_sku: str
+    item_name: str
+    trend: str
+    quantity: int
+    target_quantity: int
+    unit_cost: float
+    line_total: float
+    lead_time_days: int
+    partial: bool
+
+class RestockRecommendation(BaseModel):
+    budget: float
+    max_budget: float
+    total_cost: float
+    remaining: float
+    items: List[RestockLine]
+
+class RestockOrder(BaseModel):
+    id: str
+    status: str
+    created_date: str
+    expected_delivery: str
+    lead_time_days: int
+    budget: float
+    total_cost: float
+    items: List[RestockLine]
+
+class CreateRestockOrderRequest(BaseModel):
+    budget: float
+
+# Submitted restock orders live in memory only; they reset when the server restarts
+restock_orders: List[dict] = []
+
+TREND_PRIORITY = {'increasing': 0, 'stable': 1, 'decreasing': 2}
+
+def build_restock_plan(budget: float) -> dict:
+    """Pick forecast items to restock within a budget.
+
+    Items are ranked by trend (increasing first), then by demand growth, and
+    each targets its full 30-day forecasted demand. We fill greedily in rank
+    order; an item that doesn't fully fit gets as many whole units as the
+    remaining budget allows (marked partial), and we keep going so cheaper
+    lower-ranked items can still use leftover budget.
+    """
+    priced = [f for f in demand_forecasts if f.get('unit_cost') and f.get('lead_time_days')]
+    ranked = sorted(priced, key=lambda f: (
+        TREND_PRIORITY.get(f['trend'].lower(), len(TREND_PRIORITY)),
+        -(f['forecasted_demand'] - f['current_demand'])
+    ))
+
+    max_budget = round(sum(f['forecasted_demand'] * f['unit_cost'] for f in ranked), 2)
+    remaining = budget
+    items = []
+    for f in ranked:
+        target = f['forecasted_demand']
+        # Round before flooring so float error (e.g. 899.99999) doesn't drop a unit
+        affordable = int(round(remaining / f['unit_cost'], 6))
+        quantity = min(target, affordable)
+        if quantity <= 0:
+            continue
+        line_total = round(quantity * f['unit_cost'], 2)
+        remaining = round(remaining - line_total, 2)
+        items.append({
+            'item_sku': f['item_sku'],
+            'item_name': f['item_name'],
+            'trend': f['trend'],
+            'quantity': quantity,
+            'target_quantity': target,
+            'unit_cost': f['unit_cost'],
+            'line_total': line_total,
+            'lead_time_days': f['lead_time_days'],
+            'partial': quantity < target,
+        })
+
+    return {
+        'budget': budget,
+        'max_budget': max_budget,
+        'total_cost': round(sum(i['line_total'] for i in items), 2),
+        'remaining': remaining,
+        'items': items,
+    }
 
 # API endpoints
 @app.get("/")
@@ -303,6 +389,43 @@ def get_monthly_trends():
     result = list(months.values())
     result.sort(key=lambda x: x['month'])
     return result
+
+@app.get("/api/restock/recommendations", response_model=RestockRecommendation)
+def get_restock_recommendations(budget: float = 0):
+    """Recommend forecast items to restock within the given budget"""
+    if budget < 0:
+        raise HTTPException(status_code=400, detail="Budget must be non-negative")
+    return build_restock_plan(budget)
+
+@app.get("/api/restock/orders", response_model=List[RestockOrder])
+def get_restock_orders():
+    """List submitted restock orders, newest first"""
+    return list(reversed(restock_orders))
+
+@app.post("/api/restock/orders", response_model=RestockOrder, status_code=201)
+def create_restock_order(request: CreateRestockOrderRequest):
+    """Submit a restock order; items are recomputed server-side from the budget"""
+    if request.budget < 0:
+        raise HTTPException(status_code=400, detail="Budget must be non-negative")
+    plan = build_restock_plan(request.budget)
+    if not plan['items']:
+        raise HTTPException(status_code=400, detail="Budget too small to restock any item")
+
+    created = datetime.now().replace(microsecond=0)
+    # The order arrives when its slowest line arrives
+    lead_time = max(i['lead_time_days'] for i in plan['items'])
+    order = {
+        'id': f"RST-{len(restock_orders) + 1:04d}",
+        'status': 'Submitted',
+        'created_date': created.isoformat(),
+        'expected_delivery': (created + timedelta(days=lead_time)).isoformat(),
+        'lead_time_days': lead_time,
+        'budget': request.budget,
+        'total_cost': plan['total_cost'],
+        'items': plan['items'],
+    }
+    restock_orders.append(order)
+    return order
 
 if __name__ == "__main__":
     import uvicorn

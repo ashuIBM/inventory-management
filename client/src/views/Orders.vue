@@ -27,6 +27,54 @@
         </div>
       </div>
 
+      <!-- Restock orders have no warehouse/category, so the global filters don't apply here -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">{{ t('orders.submitted.title') }} ({{ restockOrders.length }})</h3>
+          <router-link to="/restocking" class="submitted-link">{{ t('orders.submitted.newOrder') }}</router-link>
+        </div>
+        <div v-if="restockError" class="error">{{ restockError }}</div>
+        <div v-else-if="restockOrders.length === 0" class="submitted-empty">{{ t('orders.submitted.empty') }}</div>
+        <div v-else class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ t('orders.table.orderId') }}</th>
+                <th>{{ t('orders.submitted.submittedOn') }}</th>
+                <th>{{ t('orders.table.items') }}</th>
+                <th>{{ t('orders.table.status') }}</th>
+                <th class="num">{{ t('orders.submitted.leadTime') }}</th>
+                <th>{{ t('orders.table.expectedDelivery') }}</th>
+                <th class="num">{{ t('orders.table.totalValue') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in restockOrders" :key="order.id">
+                <td><strong>{{ order.id }}</strong></td>
+                <td>{{ formatDate(order.created_date) }}</td>
+                <td>
+                  <details class="items-details">
+                    <summary class="items-summary">
+                      {{ t('orders.itemsCount', { count: order.items.length }) }}
+                    </summary>
+                    <div class="items-dropdown">
+                      <div v-for="item in order.items" :key="item.item_sku" class="item-entry">
+                        <span class="item-name">{{ translateProductName(item.item_name) }}</span>
+                        <span class="item-meta">{{ t('orders.quantity') }}: {{ item.quantity }} @ {{ currencySymbol }}{{ item.unit_cost }}</span>
+                      </div>
+                    </div>
+                  </details>
+                </td>
+                <td><span class="badge info">{{ t('orders.submitted.status') }}</span></td>
+                <td class="num">{{ t('orders.submitted.days', { count: order.lead_time_days }) }}</td>
+                <td>{{ formatDate(order.expected_delivery) }}</td>
+                <td class="num"><strong>{{ formatCurrency(order.total_cost, currentCurrency) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">{{ t('orders.allOrders') }} ({{ orders.length }})</h3>
@@ -83,6 +131,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { api } from '../api'
 import { useFilters } from '../composables/useFilters'
 import { useI18n } from '../composables/useI18n'
+import { formatCurrency } from '../utils/currency'
 
 export default {
   name: 'Orders',
@@ -153,13 +202,33 @@ export default {
       })
     }
 
-    onMounted(loadOrders)
+    const restockOrders = ref([])
+    const restockError = ref(null)
+
+    const loadRestockOrders = async () => {
+      try {
+        restockError.value = null
+        restockOrders.value = await api.getRestockOrders()
+      } catch (err) {
+        restockError.value = 'Failed to load submitted orders: ' + err.message
+        console.error('Restock orders load error:', err)
+      }
+    }
+
+    onMounted(() => {
+      loadOrders()
+      loadRestockOrders()
+    })
 
     return {
       t,
       loading,
       error,
       orders,
+      restockOrders,
+      restockError,
+      currentCurrency,
+      formatCurrency,
       getOrdersByStatus,
       getOrderStatusClass,
       formatDate,
@@ -172,6 +241,24 @@ export default {
 </script>
 
 <style scoped>
+.submitted-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.submitted-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Fixed table layout to prevent column shifting */
 .orders-table {
   table-layout: fixed;
