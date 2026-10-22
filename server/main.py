@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
-from datetime import datetime, timedelta
-from pydantic import BaseModel
+from typing import List, Literal, Optional
+from datetime import date, datetime, timedelta
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders
 
 app = FastAPI(title="Factory Inventory Management System")
@@ -441,6 +441,75 @@ def create_restock_order(request: CreateRestockOrderRequest):
     }
     restock_orders.append(order)
     return order
+
+class Task(BaseModel):
+    # The client (TasksModal / useAuth mock tasks) uses camelCase dueDate
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    title: str
+    priority: Literal['high', 'medium', 'low']
+    due_date: date = Field(alias='dueDate')
+    status: Literal['pending', 'completed']
+
+class CreateTaskRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    title: str = Field(min_length=1, max_length=200)
+    priority: Literal['high', 'medium', 'low'] = 'medium'
+    due_date: date = Field(alias='dueDate')
+
+    @field_validator('title')
+    @classmethod
+    def title_not_blank(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError('title must not be blank')
+        return value
+
+# Tasks live in memory only; they reset when the server restarts.
+# IDs are strings so they never collide with the client's numeric mock task IDs,
+# which App.vue uses to decide whether a task is local or server-side.
+tasks: List[dict] = []
+task_counter = 0
+
+def find_task(task_id: str) -> dict:
+    task = next((t for t in tasks if t['id'] == task_id), None)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    return task
+
+@app.get("/api/tasks", response_model=List[Task])
+def get_tasks():
+    """List tasks, newest first"""
+    return list(reversed(tasks))
+
+@app.post("/api/tasks", response_model=Task, status_code=201)
+def create_task(request: CreateTaskRequest):
+    """Create a pending task"""
+    global task_counter
+    task_counter += 1
+    task = {
+        'id': f"TASK-{task_counter:04d}",
+        'title': request.title,
+        'priority': request.priority,
+        'due_date': request.due_date,
+        'status': 'pending',
+    }
+    tasks.append(task)
+    return task
+
+@app.patch("/api/tasks/{task_id}", response_model=Task)
+def toggle_task(task_id: str):
+    """Toggle a task between pending and completed"""
+    task = find_task(task_id)
+    task['status'] = 'completed' if task['status'] == 'pending' else 'pending'
+    return task
+
+@app.delete("/api/tasks/{task_id}", status_code=204)
+def delete_task(task_id: str):
+    """Delete a task"""
+    tasks.remove(find_task(task_id))
 
 if __name__ == "__main__":
     import uvicorn
