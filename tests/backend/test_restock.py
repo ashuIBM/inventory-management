@@ -66,6 +66,20 @@ class TestRestockRecommendations:
         for item in get_plan(client, max_budget / 2)["items"]:
             assert item["line_total"] == pytest.approx(item["quantity"] * item["unit_cost"], abs=0.01)
 
+    def test_max_budget_matches_demand_forecasts(self, client):
+        """Test max_budget is the full-forecast cost of every priced item in /api/demand."""
+        forecasts = client.get("/api/demand").json()
+        # Mirrors the server: only forecasts with a unit cost and lead time can be restocked
+        priced = [f for f in forecasts if f.get("unit_cost") and f.get("lead_time_days")]
+        assert len(priced) > 0
+        expected = sum(f["forecasted_demand"] * f["unit_cost"] for f in priced)
+
+        max_budget = get_plan(client, 0)["max_budget"]
+        assert max_budget == pytest.approx(expected, abs=0.01)
+
+        plan = get_plan(client, max_budget)
+        assert {i["item_sku"] for i in plan["items"]} == {f["item_sku"] for f in priced}
+
     def test_negative_budget_rejected(self, client):
         response = client.get("/api/restock/recommendations?budget=-1")
         assert response.status_code == 400
