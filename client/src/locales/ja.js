@@ -262,6 +262,31 @@ export default {
     }
   },
 
+  // Backlog
+  backlog: {
+    title: 'バックログ管理',
+    description: '在庫不足の追跡と解消',
+    highPriority: '優先度：高',
+    mediumPriority: '優先度：中',
+    lowPriority: '優先度：低',
+    totalItems: 'バックログ総数',
+    items: 'バックログ項目',
+    empty: 'バックログはありません。すべての注文に対応できます！',
+    unitsShort: '{count}個不足',
+    days: '{count}日',
+    loadFailed: 'バックログの読み込みに失敗しました',
+    table: {
+      orderId: '注文ID',
+      sku: 'SKU',
+      itemName: '品目名',
+      quantityNeeded: '必要数量',
+      quantityAvailable: '在庫数量',
+      shortage: '不足',
+      daysDelayed: '遅延日数',
+      priority: '優先度'
+    }
+  },
+
   // Filters
   filters: {
     timePeriod: '期間',
