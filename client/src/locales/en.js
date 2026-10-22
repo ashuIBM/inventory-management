@@ -85,6 +85,8 @@ export default {
     totalItems: 'Total Items',
     totalValue: 'Total Value',
     lowStockItems: 'Low Stock Items',
+    lowStockOnly: 'Low stock only',
+    exportCsv: 'Export CSV',
     warehouses: 'Warehouses',
     table: {
       sku: 'SKU',
@@ -285,6 +287,14 @@ export default {
       daysDelayed: 'Days Delayed',
       priority: 'Priority'
     }
+  },
+
+  // Low-stock alert
+  lowStock: {
+    title: '{count} items at or below reorder point',
+    short: '{count} below',
+    more: '+{count} more',
+    viewAll: 'View low stock'
   },
 
   // Filters
