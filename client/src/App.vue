@@ -29,6 +29,20 @@
             {{ t('nav.reports') }}
           </router-link>
         </nav>
+        <button
+          class="theme-toggle"
+          type="button"
+          :aria-label="isDark ? t('theme.toLight') : t('theme.toDark')"
+          :title="isDark ? t('theme.toLight') : t('theme.toDark')"
+          @click="toggleTheme"
+        >
+          <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+          </svg>
+        </button>
         <LanguageSwitcher />
         <ProfileMenu
           @show-profile-details="showProfileDetails = true"
@@ -63,6 +77,7 @@ import { useRoute } from 'vue-router'
 import { api } from './api'
 import { useAuth } from './composables/useAuth'
 import { useI18n } from './composables/useI18n'
+import { useTheme } from './composables/useTheme'
 import FilterBar from './components/FilterBar.vue'
 import ProfileMenu from './components/ProfileMenu.vue'
 import ProfileDetailsModal from './components/ProfileDetailsModal.vue'
@@ -81,6 +96,7 @@ export default {
   setup() {
     const { currentUser } = useAuth()
     const { t } = useI18n()
+    const { isDark, toggleTheme } = useTheme()
     const route = useRoute()
 
     // Routes are unnamed, so match by path. The Restocking page ignores the
@@ -159,6 +175,8 @@ export default {
 
     return {
       t,
+      isDark,
+      toggleTheme,
       showFilterBar,
       showProfileDetails,
       showTasks,
@@ -172,6 +190,84 @@ export default {
 </script>
 
 <style>
+/* Theme tokens: dark navy + orange. Light is the default; [data-theme="dark"]
+   is set on <html> by composables/useTheme.js. Status hues (red/green/amber)
+   stay literal in components; only their soft backgrounds/text are tokens. */
+:root {
+  color-scheme: light;
+  --navy-900: #0b1b33;
+  --navy-800: #10264a;
+  --navy-600: #1f3d6b;
+  --accent: #f97316;
+  --accent-strong: #ea580c;
+  --accent-deep: #c2410c;
+  --accent-bright: #fdba74;
+  --accent-soft: #fff4ea;
+  --accent-softer: #fed7aa;
+  --on-accent: #ffffff;
+
+  --surface: #ffffff;
+  --surface-alt: #f4f6fa;
+  --surface-muted: #eaeef5;
+  --border: #dde3ed;
+  --border-strong: #c3ccdb;
+  --text: #0b1b33;
+  --text-secondary: #2c3e5c;
+  --text-muted: #5b6b85;
+  --text-subtle: #8c99ae;
+  --primary-bg: #0b1b33;
+  --primary-bg-hover: #1f3d6b;
+
+  --nav-bg: #0b1b33;
+  --nav-text: #ffffff;
+  --nav-text-muted: #a9b8d0;
+  --nav-border: #24406b;
+  --nav-hover: rgba(255, 255, 255, 0.08);
+  --nav-active: rgba(249, 115, 22, 0.22);
+
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #991b1b;
+  --success-soft: #dcfce7;
+  --success-border: #bbf7d0;
+  --success-text: #166534;
+  --warning-soft: #fff7ed;
+  --warning-border: #fed7aa;
+  --warning-text: #9a3412;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --accent-soft: rgba(249, 115, 22, 0.14);
+  --accent-softer: rgba(249, 115, 22, 0.3);
+  --accent-deep: #fdba74;
+
+  --surface: #12223d;
+  --surface-alt: #0a1628;
+  --surface-muted: #1a2d4d;
+  --border: #233a5e;
+  --border-strong: #31507d;
+  --text: #e8eef8;
+  --text-secondary: #c3cfe2;
+  --text-muted: #94a6c2;
+  --text-subtle: #6f82a2;
+  --primary-bg: #f97316;
+  --primary-bg-hover: #ea580c;
+
+  --nav-bg: #07101f;
+  --nav-border: #1c3152;
+
+  --danger-soft: rgba(239, 68, 68, 0.14);
+  --danger-border: rgba(239, 68, 68, 0.35);
+  --danger-text: #fca5a5;
+  --success-soft: rgba(16, 185, 129, 0.14);
+  --success-border: rgba(16, 185, 129, 0.35);
+  --success-text: #6ee7b7;
+  --warning-soft: rgba(245, 158, 11, 0.14);
+  --warning-border: rgba(245, 158, 11, 0.35);
+  --warning-text: #fcd34d;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -180,8 +276,8 @@ export default {
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #f8fafc;
-  color: #1e293b;
+  background: var(--surface-alt);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -193,8 +289,8 @@ body {
 }
 
 .top-nav {
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--nav-bg);
+  border-bottom: 3px solid var(--accent);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
@@ -215,6 +311,30 @@ body {
   margin-right: 1rem;
 }
 
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-right: 0.75rem;
+  border: 1px solid var(--nav-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nav-text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--nav-hover);
+  border-color: var(--accent);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 .nav-container > .language-switcher {
   margin-right: 1rem;
 }
@@ -228,16 +348,16 @@ body {
 .logo h1 {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--nav-text);
   letter-spacing: -0.025em;
 }
 
 .subtitle {
   font-size: 0.813rem;
-  color: #64748b;
+  color: var(--nav-text-muted);
   font-weight: 400;
   padding-left: 0.75rem;
-  border-left: 1px solid #e2e8f0;
+  border-left: 1px solid var(--nav-border);
 }
 
 .nav-tabs {
@@ -247,7 +367,7 @@ body {
 
 .nav-tabs a {
   padding: 0.625rem 1.25rem;
-  color: #64748b;
+  color: var(--nav-text-muted);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.938rem;
@@ -257,13 +377,13 @@ body {
 }
 
 .nav-tabs a:hover {
-  color: #0f172a;
-  background: #f1f5f9;
+  color: var(--nav-text);
+  background: var(--nav-hover);
 }
 
 .nav-tabs a.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--nav-text);
+  background: var(--nav-active);
 }
 
 .nav-tabs a.active::after {
@@ -272,8 +392,8 @@ body {
   bottom: -1px;
   left: 0;
   right: 0;
-  height: 2px;
-  background: #2563eb;
+  height: 3px;
+  background: var(--accent);
 }
 
 .main-content {
@@ -291,13 +411,13 @@ body {
 .page-header h2 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
   margin-bottom: 0.375rem;
   letter-spacing: -0.025em;
 }
 
 .page-header p {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.938rem;
 }
 
@@ -309,20 +429,20 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: var(--surface);
   padding: 1.25rem;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   transition: all 0.2s ease;
 }
 
 .stat-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .stat-label {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -333,7 +453,7 @@ body {
 .stat-value {
   font-size: 2.25rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
   letter-spacing: -0.025em;
 }
 
@@ -350,14 +470,14 @@ body {
 }
 
 .stat-card.info .stat-value {
-  color: #2563eb;
+  color: var(--accent-strong);
 }
 
 .card {
-  background: white;
+  background: var(--surface);
   border-radius: 10px;
   padding: 1.25rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   margin-bottom: 1.25rem;
 }
 
@@ -367,13 +487,13 @@ body {
   align-items: center;
   margin-bottom: 1rem;
   padding-bottom: 0.875rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .card-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
   letter-spacing: -0.025em;
 }
 
@@ -387,16 +507,16 @@ table {
 }
 
 thead {
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--surface-alt);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 th {
   text-align: left;
   padding: 0.5rem 0.75rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -404,8 +524,8 @@ th {
 
 td {
   padding: 0.5rem 0.75rem;
-  border-top: 1px solid #f1f5f9;
-  color: #334155;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -414,7 +534,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: #f8fafc;
+  background: var(--surface-alt);
 }
 
 .badge {
@@ -428,66 +548,66 @@ tbody tr:hover {
 }
 
 .badge.success {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-soft);
+  color: var(--success-text);
 }
 
 .badge.warning {
-  background: #fed7aa;
-  color: #92400e;
+  background: var(--warning-soft);
+  color: var(--warning-text);
 }
 
 .badge.danger {
-  background: #fecaca;
-  color: #991b1b;
+  background: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 .badge.info {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .badge.increasing {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-soft);
+  color: var(--success-text);
 }
 
 .badge.decreasing {
-  background: #fecaca;
-  color: #991b1b;
+  background: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 .badge.stable {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .badge.high {
-  background: #fecaca;
-  color: #991b1b;
+  background: var(--danger-soft);
+  color: var(--danger-text);
 }
 
 .badge.medium {
-  background: #fed7aa;
-  color: #92400e;
+  background: var(--warning-soft);
+  color: var(--warning-text);
 }
 
 .badge.low {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
 
 .loading {
   text-align: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.938rem;
 }
 
 .error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
   padding: 1rem;
   border-radius: 8px;
   margin: 1rem 0;

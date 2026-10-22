@@ -225,7 +225,7 @@ export default {
 .budget-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -233,13 +233,13 @@ export default {
 .budget-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .budget-slider {
   width: 100%;
-  accent-color: #3b82f6;
+  accent-color: var(--accent-strong);
   cursor: pointer;
 }
 
@@ -247,19 +247,19 @@ export default {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 0.375rem;
 }
 
 .stat-sub {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 0.25rem;
 }
 
 .place-order-btn {
-  background: #0f172a;
-  color: white;
+  background: var(--primary-bg);
+  color: var(--on-accent);
   border: none;
   border-radius: 8px;
   padding: 0.625rem 1.25rem;
@@ -270,11 +270,11 @@ export default {
 }
 
 .place-order-btn:hover:not(:disabled) {
-  background: #1e293b;
+  background: var(--primary-bg-hover);
 }
 
 .place-order-btn:disabled {
-  background: #cbd5e1;
+  background: var(--border-strong);
   cursor: not-allowed;
 }
 
@@ -286,27 +286,27 @@ export default {
 }
 
 .notice.success {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+  background: var(--success-soft);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
 }
 
 .notice.success a {
-  color: #166534;
+  color: var(--success-text);
   font-weight: 600;
   margin-left: 0.5rem;
 }
 
 .notice.danger {
-  background: #fef2f2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
 }
 
 .empty-state {
   padding: 2rem;
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .table-container {
@@ -325,6 +325,6 @@ export default {
 .partial-tag {
   display: block;
   font-size: 0.7rem;
-  color: #b45309;
+  color: var(--warning-text);
 }
 </style>

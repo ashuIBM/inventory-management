@@ -297,6 +297,12 @@ export default {
     viewAll: '在庫僅少を表示'
   },
 
+  // Theme
+  theme: {
+    toDark: 'ダークモードに切り替え',
+    toLight: 'ライトモードに切り替え'
+  },
+
   // Filters
   filters: {
     timePeriod: '期間',

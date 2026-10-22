@@ -297,6 +297,12 @@ export default {
     viewAll: 'View low stock'
   },
 
+  // Theme
+  theme: {
+    toDark: 'Switch to dark mode',
+    toLight: 'Switch to light mode'
+  },
+
   // Filters
   filters: {
     timePeriod: 'Time Period',
