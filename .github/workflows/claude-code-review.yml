@@ -40,4 +40,4 @@ jobs:
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
 
           # Default model (Opus) is rejected for this account's API key; Sonnet is sufficient for review
-          claude_args: '--model claude-sonnet-5-5 --allowed-tools"Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+          claude_args: '--model claude-sonnet-5-5 --allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
