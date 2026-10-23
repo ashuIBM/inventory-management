@@ -232,8 +232,8 @@ export default {
 }
 
 .trend-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1.5rem;
   transition: all 0.2s ease;
@@ -248,7 +248,7 @@ export default {
 }
 
 .stable-card {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid var(--accent);
 }
 
 .decreasing-card {
@@ -261,7 +261,7 @@ export default {
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border);
 }
 
 .trend-icon {
@@ -277,24 +277,24 @@ export default {
 }
 
 .increasing-card .trend-icon {
-  background: #d1fae5;
+  background: var(--success-soft);
   color: #059669;
 }
 
 .stable-card .trend-icon {
-  background: #dbeafe;
-  color: #2563eb;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .decreasing-card .trend-icon {
-  background: #fee2e2;
+  background: var(--danger-soft);
   color: #dc2626;
 }
 
 .trend-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -302,7 +302,7 @@ export default {
 .trend-count {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text);
   margin-top: 0.25rem;
 }
 
@@ -317,18 +317,18 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0.75rem;
-  background: #f8fafc;
+  background: var(--surface-alt);
   border-radius: 6px;
   transition: background 0.2s;
 }
 
 .trend-item:hover {
-  background: #f1f5f9;
+  background: var(--surface-muted);
 }
 
 .item-name {
   font-size: 0.875rem;
-  color: #0f172a;
+  color: var(--text);
   font-weight: 500;
   flex: 1;
   overflow: hidden;
@@ -348,7 +348,7 @@ export default {
 }
 
 .stable-card .item-change {
-  color: #3b82f6;
+  color: var(--accent-strong);
 }
 
 .decreasing-card .item-change {
@@ -356,12 +356,12 @@ export default {
 }
 
 .item-change.neutral {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .more-items {
   font-size: 0.813rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-style: italic;
   text-align: center;
   padding: 0.5rem;

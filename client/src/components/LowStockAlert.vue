@@ -60,11 +60,11 @@ export default {
   gap: 1rem;
   padding: 0.875rem 1.125rem;
   margin-bottom: 1.25rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
   border-left: 4px solid #ef4444;
   border-radius: 8px;
-  color: #991b1b;
+  color: var(--danger-text);
   font-size: 0.875rem;
 }
 
@@ -82,8 +82,8 @@ export default {
 }
 
 .alert-chip {
-  background: white;
-  border: 1px solid #fecaca;
+  background: var(--surface);
+  border: 1px solid var(--danger-border);
   border-radius: 999px;
   padding: 0.125rem 0.625rem;
   font-size: 0.8rem;
@@ -92,13 +92,13 @@ export default {
 
 .alert-more {
   font-size: 0.8rem;
-  color: #b91c1c;
+  color: var(--danger-text);
 }
 
 .alert-link {
   flex-shrink: 0;
   font-weight: 600;
-  color: #991b1b;
+  color: var(--danger-text);
   text-decoration: underline;
 }
 </style>

@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
+import { initTheme } from './composables/useTheme'
 import Dashboard from './views/Dashboard.vue'
 import Inventory from './views/Inventory.vue'
 import Orders from './views/Orders.vue'
@@ -23,6 +24,8 @@ const router = createRouter({
     { path: '/reports', component: Reports }
   ]
 })
+
+initTheme()
 
 const app = createApp(App)
 app.use(router)
