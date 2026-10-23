@@ -85,6 +85,8 @@ export default {
     totalItems: '総品目数',
     totalValue: '総価値',
     lowStockItems: '在庫僅少品目',
+    lowStockOnly: '在庫僅少のみ',
+    exportCsv: 'CSVエクスポート',
     warehouses: '倉庫',
     table: {
       sku: 'SKU',
@@ -285,6 +287,14 @@ export default {
       daysDelayed: '遅延日数',
       priority: '優先度'
     }
+  },
+
+  // Low-stock alert
+  lowStock: {
+    title: '再注文点以下の品目が{count}件あります',
+    short: '{count}個不足',
+    more: '他{count}件',
+    viewAll: '在庫僅少を表示'
   },
 
   // Filters

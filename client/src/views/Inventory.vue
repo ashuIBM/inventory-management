@@ -8,9 +8,18 @@
     <div v-if="loading" class="loading">{{ t('common.loading') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else>
+      <LowStockAlert :items="items" :show-link="false" />
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">{{ t('inventory.stockLevels') }} ({{ filteredItems.length }} {{ t('inventory.skus') }})</h3>
+          <div class="inventory-actions">
+          <label class="low-stock-toggle">
+            <input v-model="lowStockOnly" type="checkbox" />
+            {{ t('inventory.lowStockOnly') }}
+          </label>
+          <button class="export-btn" :disabled="filteredItems.length === 0" @click="exportCsv">
+            {{ t('inventory.exportCsv') }}
+          </button>
           <div class="search-box">
             <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -31,6 +40,7 @@
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
             </button>
+          </div>
           </div>
         </div>
         <div class="table-container">
@@ -85,15 +95,19 @@
 
 <script>
 import { ref, onMounted, watch, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { api } from '../api'
 import { useFilters } from '../composables/useFilters'
 import { useI18n } from '../composables/useI18n'
 import InventoryDetailModal from '../components/InventoryDetailModal.vue'
+import LowStockAlert from '../components/LowStockAlert.vue'
+import { toCsv, downloadCsv } from '../utils/csv'
 
 export default {
   name: 'Inventory',
   components: {
-    InventoryDetailModal
+    InventoryDetailModal,
+    LowStockAlert
   },
   setup() {
     const { t, currentCurrency, translateProductName, translateWarehouse } = useI18n()
@@ -106,6 +120,10 @@ export default {
     const error = ref(null)
     const items = ref([])
     const searchQuery = ref('')
+    const route = useRoute()
+    // The Dashboard low-stock banner links here with ?lowStock=1
+    const lowStockOnly = ref(route.query.lowStock === '1')
+    watch(() => route.query.lowStock, value => { lowStockOnly.value = value === '1' })
 
     // Modal state
     const showItemModal = ref(false)
@@ -138,6 +156,10 @@ export default {
         filtered = filtered.filter(item =>
           item.name.toLowerCase().includes(query)
         )
+      }
+
+      if (lowStockOnly.value) {
+        filtered = filtered.filter(item => getStockStatusKey(item) === 'lowStock')
       }
 
       // Sort by stock status: Low Stock first, then Adequate, then In Stock
@@ -196,6 +218,24 @@ export default {
       return categoryMap[category] || category
     }
 
+    // Exports exactly what the table shows (filters, search, low-stock toggle)
+    const exportCsv = () => {
+      const columns = [
+        { header: t('inventory.table.sku'), value: i => i.sku },
+        { header: t('inventory.table.itemName'), value: i => i.name },
+        { header: t('inventory.table.category'), value: i => i.category },
+        { header: t('inventory.table.warehouse'), value: i => i.warehouse },
+        { header: t('inventory.table.location'), value: i => i.location },
+        { header: t('inventory.table.quantityOnHand'), value: i => i.quantity_on_hand },
+        { header: t('inventory.table.reorderPoint'), value: i => i.reorder_point },
+        { header: t('inventory.table.unitCost') + ' (USD)', value: i => i.unit_cost.toFixed(2) },
+        { header: t('inventory.table.totalValue') + ' (USD)', value: i => (i.quantity_on_hand * i.unit_cost).toFixed(2) },
+        { header: t('inventory.table.status'), value: i => getStockStatus(i) }
+      ]
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadCsv(`inventory-${stamp}.csv`, toCsv(columns, filteredItems.value))
+    }
+
     const showItemDetail = (item) => {
       selectedItem.value = item
       showItemModal.value = true
@@ -209,6 +249,8 @@ export default {
       error,
       items,
       searchQuery,
+      lowStockOnly,
+      exportCsv,
       filteredItems,
       getStockStatus,
       getStockStatusClass,
@@ -225,6 +267,44 @@ export default {
 </script>
 
 <style scoped>
+.inventory-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.low-stock-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.export-btn {
+  background: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.export-btn:hover:not(:disabled) {
+  background: #1e293b;
+}
+
+.export-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
 .page-header {
   margin-bottom: 1.5rem;
 }
